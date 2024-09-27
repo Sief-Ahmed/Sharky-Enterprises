@@ -1,0 +1,18 @@
+{
+    "name": "kali/php-fishing-quote-api",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Kali\\PhpFishingQuoteApi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "sief"
+        }
+    ],
+    "require": {
+        "slim/slim": "^4.0",
+        "slim/psr7": "^1.7"
+    }
+}
