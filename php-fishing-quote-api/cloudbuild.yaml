@@ -130,4 +130,3 @@ secrets:
 substitutions:
   _IMAGE_URI: 'gcr.io/your-project/your-image'
   _BUCKET_NAME: 'sec-scans'
-  _IMAGE_URI='us-docker.pkg.dev/my-gcp-project/my-repo/my-app-image:latest'
