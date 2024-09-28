@@ -125,9 +125,9 @@ images:
 # Define secret environment variables using Secret Manager
 availableSecrets:
   secretManager:
-    - versionName: 'projects/720033023335/secrets/SNYK_TOKEN/versions/1'
+    - versionName: 'projects/720033023335/secrets/SNYK_TOKEN/versions/latest'
       env: 'SNYK_TOKEN'
-    - versionName: 'projects/720033023335/secrets/SONAR_TOKE/versions/1'
+    - versionName: 'projects/720033023335/secrets/SONAR_TOKE/versions/latest'
       env: 'SONAR_TOKEN'
 
 # Define substitution variables
