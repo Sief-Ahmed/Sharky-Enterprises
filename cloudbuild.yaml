@@ -2,10 +2,6 @@ options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 
 steps:
-  # Your build steps...
-
-
-steps:
   # Step 1: Scan the code using Snyk
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -26,7 +22,7 @@ steps:
       - 'sonar:sonar'
       - '-Dsonar.projectKey=sharky-Enterprises'
       - '-Dsonar.host.url=http://localhost:9000'
-      - '-Dsonar.login=${SONAR_TOKEN}'
+      - '-Dsonar.login=$$SONAR_TOKEN'
     id: 'sonarqube-scan'
     secretEnv: ['SONAR_TOKEN']
 
@@ -129,9 +125,9 @@ images:
 # Define secret environment variables using Secret Manager
 availableSecrets:
   secretManager:
-    - versionName: 'projects/720033023335/secrets/SNYK_TOKEN'
+    - versionName: 'projects/720033023335/secrets/SNYK_TOKEN/versions/latest'
       env: 'SNYK_TOKEN'
-    - versionName: 'projects/720033023335/secrets/SONAR_TOKE'
+    - versionName: 'projects/720033023335/secrets/SONAR_TOKEN/versions/latest'
       env: 'SONAR_TOKEN'
 
 # Define substitution variables
