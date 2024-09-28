@@ -2,24 +2,37 @@ options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 
 steps:
-  # Step 1: Install Snyk CLI globally using npm
-  - name: 'node:14'  # Using the Node.js 14 image which includes npm
+  # Step 1: Install Node.js and npm manually
+  - name: 'gcr.io/cloud-builders/bash'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        # Download and install Node.js and npm
+        curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
+        apt-get install -y nodejs
+        
+        # Verify installation
+        node -v
+        npm -v
+
+        # Install Snyk CLI globally using npm
         npm install snyk -g
-    id: 'Install Snyk CLI'
+    id: 'Install Node.js, npm, and Snyk CLI'
 
   # Step 2: Run Snyk test in the flask_app directory with the provided token
-  - name: 'node:14'
+  - name: 'gcr.io/cloud-builders/bash'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        cd flask_app
-        SNYK_TOKEN=8686f5ad-2e7d-487b-904e-24efa16fc928 snyk test --skip-unresolved
+        cd flask_app  # Change to the flask_app directory
+        SNYK_TOKEN=8686f5ad-2e7d-487b-904e-24efa16fc928 snyk code test --skip-unresolved --json-file-output=json
     id: 'Snyk Test in flask_app'
+
+# No additional options required, adjust timeout if necessary
+timeout: 1200s
+
 
 
 
