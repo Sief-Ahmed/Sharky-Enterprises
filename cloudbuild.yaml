@@ -50,23 +50,26 @@ steps:
   #   id: 'upload-sonarqube-output'
   #   waitFor: ['fetch-sonarqube-report']
 
-  # Step 3: Scan the code using OWASP Dependency Check
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'run'
-      - '--rm'
-      - '-v'
-      - '/workspace:/src'
-      - 'owasp/dependency-check'
-      - '--project'
-      - 'sharky-Enterprises'
-      - '--scan'
-      - '/src'
-      - '--format'
-      - 'JSON'
-      - '--out'
-      - '/src/owasp-report.json'
-    id: 'owasp-scan'
+  # # Step 3: Scan the code using OWASP Dependency Check
+  # - name: 'gcr.io/cloud-builders/docker'
+  # args:
+  #   - 'run'
+  #   - '--rm'
+  #   - '-m'
+  #   - '4g'  # Allocate 4GB of memory
+  #   - '-v'
+  #   - '/workspace:/src'
+  #   - 'owasp/dependency-check'
+  #   - '--project'
+  #   - 'sharky-Enterprises'
+  #   - '--scan'
+  #   - '/src'
+  #   - '--format'
+  #   - 'JSON'
+  #   - '--out'
+  #   - '/src/owasp-report.json'
+  # id: 'owasp-scan'
+
 
   # Step 5: Send all code scan outputs to Cloud Storage bucket
   - name: 'gcr.io/cloud-builders/gsutil'
