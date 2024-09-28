@@ -8,7 +8,7 @@ steps:
         set -e
         # Install Snyk CLI
         curl -sL https://snyk.io/install | bash
-        snyk auth ${SNYK_TOKEN}
+        snyk auth "${SNYK_TOKEN}"
         snyk test --json > snyk-results.json
     id: 'snyk-scan'
     secretEnv: ['SNYK_TOKEN']
@@ -119,11 +119,13 @@ steps:
 images:
   - '${_IMAGE_URI}'
 
-# Define secret environment variables
-secrets:
-  - secretEnv:
-      SNYK_TOKEN: projects/720033023335/secrets/SNYK_TOKEN/versions/latest
-      SONAR_TOKEN: projects/720033023335/secrets/SONAR_TOKEN/versions/latest
+# Define secret environment variables using Secret Manager
+availableSecrets:
+  secretManager:
+    - versionName: 'projects/720033023335/secrets/SNYK_TOKEN/versions/latest'
+      env: 'SNYK_TOKEN'
+    - versionName: 'projects/720033023335/secrets/SONAR_TOKEN/versions/latest'
+      env: 'SONAR_TOKEN'
 
 # Define substitution variables
 substitutions:
