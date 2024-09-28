@@ -5,7 +5,7 @@ steps:
   - name: 'gcr.io/cloud-builders/git'
     args: ['clone', 'https://github.com/Sief-Ahmed/Sharky-Enterprises', '.']
 
-  # Step 2: Set Up Python Environment
+   # Step 2: Set Up Python Environment
   - name: 'python:3.9'
     id: 'Setup Python Environment'
     entrypoint: 'bash'
@@ -17,34 +17,27 @@ steps:
         source venv/bin/activate
         pip install -r requirements.txt
 
-  # Step 3: Set Up PHP Environment
-  - name: 'php:8.0'
-    id: 'Setup PHP Environment'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        cd php-fishing-quote-api
-        composer install
-
-  # Step 4: Run Snyk Security Scan for Python
-  - name: 'snyk/snyk-cli:latest'
-    id: 'Snyk Scan Python'
+  # Step 3: Run Python Unit Tests
+  - name: 'python:3.9'
+    id: 'Run Python Tests'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         cd flask_app
-        SNYK_TOKEN=8686f5ad-2e7d-487b-904e-24efa16fc928 snyk code test --skip-unresolved --json-file-output=json
+        source venv/bin/activate
+        python -m unittest discover -s tests
 
-  # Step 5: Run Snyk Security Scan for PHP
+  # Step 4: Run Snyk Security Scan
   - name: 'snyk/snyk-cli:latest'
-    id: 'Snyk Scan PHP'
+    id: 'Snyk Scan Python'
     entrypoint: 'bash'
+    env:
+      - 'SNYK_TOKEN=${SNYK_TOKEN}'
     args:
       - '-c'
       - |
-        cd php-fishing-quote-api
+        cd flask_app
         SNYK_TOKEN=8686f5ad-2e7d-487b-904e-24efa16fc928 snyk code test --skip-unresolved --json-file-output=json
 
   # # Step 6: Run SonarQube Analysis for Python
