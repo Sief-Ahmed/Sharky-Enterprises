@@ -127,7 +127,7 @@ availableSecrets:
   secretManager:
     - versionName: 'projects/720033023335/secrets/SNYK_TOKEN/versions/latest'
       env: 'SNYK_TOKEN'
-    - versionName: 'projects/720033023335/secrets/SONAR_TOKEN/versions/latest'
+    - versionName: 'projects/720033023335/secrets/SONAR_TOKE/versions/latest'
       env: 'SONAR_TOKEN'
 
 # Define substitution variables
