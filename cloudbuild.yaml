@@ -11,7 +11,7 @@ steps:
         set -e
         # Install Snyk CLI
         curl -sL https://snyk.io/install | bash
-        snyk auth "${SNYK_TOKEN}"
+        snyk auth "$${SNYK_TOKEN}"
         snyk test --json > snyk-results.json
     id: 'snyk-scan'
     secretEnv: ['SNYK_TOKEN']
@@ -36,7 +36,7 @@ steps:
         # Wait for SonarQube analysis to complete
         sleep 30
         # Fetch the analysis report
-        curl -u "${SONAR_TOKEN}:" "http://localhost:9000/api/issues/search?componentKeys=sharky-Enterprises" > sonar-report.json
+        curl -u "$${SONAR_TOKEN}:" "http://localhost:9000/api/issues/search?componentKeys=sharky-Enterprises" > sonar-report.json
     id: 'fetch-sonarqube-report'
     waitFor: ['sonarqube-scan']
     secretEnv: ['SONAR_TOKEN']
