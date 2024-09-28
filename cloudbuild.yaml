@@ -2,39 +2,22 @@ options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 
 steps:
-  # Step 1: Install Node.js and npm manually
-  - name: 'gcr.io/cloud-builders/bash'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        # Download and install Node.js and npm
-        curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
-        apt-get install -y nodejs
-        
-        # Verify installation
-        node -v
-        npm -v
+  #- name: maven:3-jdk-11
+    entrypoint: mvn
+    args: ['verify', 'sonar:sonar','-Dsonar.host.url=https://sonarcloud.io','-Dsonar.organization=gcpdevsecopsorgkey','-Dsonar.projectKey=gcpdevsecopsorgkey','-Dsonar.login=${_SONAR_TOKEN}']
+    id: SAST Scan using SonarCloud in GCP DevSecOps Pipeline
 
-        # Install Snyk CLI globally using npm
-        npm install snyk -g
-    id: 'Install Node.js, npm, and Snyk CLI'
-
-  # Step 2: Run Snyk test in the flask_app directory with the provided token
-  - name: 'gcr.io/cloud-builders/bash'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        cd flask_app  # Change to the flask_app directory
-        SNYK_TOKEN=8686f5ad-2e7d-487b-904e-24efa16fc928 snyk code test --skip-unresolved --json-file-output=json
-    id: 'Snyk Test in flask_app'
-
-# No additional options required, adjust timeout if necessary
-timeout: 1200s
-
-
-
+ - name: 'ubuntu'
+    entrypoint: bash
+    args: 
+        - '-c'
+        - |-
+          apt-get update
+          apt-get -y install maven 
+          SNYK_TOKEN=${_SNYK_TOKEN}
+          export SNYK_TOKEN
+          mvn snyk:test -fn 
+    id: SCA Scan using Snyk in GCP DevSecOps Pipeline
 
   # # Step 2: Run Snyk security scan on the entire Cloud Build workspace
   # - name: 'snyk/snyk-cli:npm'
@@ -62,12 +45,12 @@ timeout: 1200s
 
 # Optional: Notifications or further actions
 
-# substitutions:
-#   _SNYK_TOKEN: '8686f5ad-2e7d-487b-904e-24efa16fc928'
-#   _SONAR_PROJECT_KEY: 'Sharky-Enterprises'
-#   _SONAR_HOST_URL: 'https://your-sonarqube-instance.com'
-#   _SONAR_AUTH_TOKEN: 'be7e9422567f4c81bbcfe0021aabe1d5ae792486'
-#   _REPO_NAME: 'Sharky-Enterprises'
+substitutions:
+  _SNYK_TOKEN: '8686f5ad-2e7d-487b-904e-24efa16fc928'
+  _SONAR_PROJECT_KEY: 'Sharky-Enterprises'
+  _SONAR_HOST_URL: 'https://your-sonarqube-instance.com'
+  _SONAR_AUTH_TOKEN: 'be7e9422567f4c81bbcfe0021aabe1d5ae792486'
+  _REPO_NAME: 'Sharky-Enterprises'
 
 # Additional settings
 timeout: 1200s
