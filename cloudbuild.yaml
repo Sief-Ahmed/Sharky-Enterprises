@@ -47,39 +47,39 @@ steps:
         cd php-fishing-quote-api
         SNYK_TOKEN=8686f5ad-2e7d-487b-904e-24efa16fc928 snyk code test --skip-unresolved --json-file-output=json
 
-  # Step 6: Run SonarQube Analysis for Python
-  - name: 'sonarsource/sonar-scanner-cli:latest'
-    id: 'SonarQube Scan Python'
-    env:
-      - 'SONAR_HOST_URL=https://your-sonarqube-server.com'
-      - 'SONAR_TOKEN=${SONAR_TOKEN}'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        cd flask_app
-        sonar-scanner \
-          -Dsonar.projectKey=your_python_project_key \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=$SONAR_HOST_URL \
-          -Dsonar.login=$SONAR_TOKEN
+  # # Step 6: Run SonarQube Analysis for Python
+  # - name: 'sonarsource/sonar-scanner-cli:latest'
+  #   id: 'SonarQube Scan Python'
+  #   env:
+  #     - 'SONAR_HOST_URL=https://your-sonarqube-server.com'
+  #     - 'SONAR_TOKEN=${SONAR_TOKEN}'
+  #   entrypoint: 'bash'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       cd flask_app
+  #       sonar-scanner \
+  #         -Dsonar.projectKey=your_python_project_key \
+  #         -Dsonar.sources=. \
+  #         -Dsonar.host.url=$SONAR_HOST_URL \
+  #         -Dsonar.login=$SONAR_TOKEN
 
-  # Step 7: Run SonarQube Analysis for PHP
-  - name: 'sonarsource/sonar-scanner-cli:latest'
-    id: 'SonarQube Scan PHP'
-    env:
-      - '$SONAR_HOST_URL'
-      - 'SONAR_TOKEN=${SONAR_TOKEN}'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        cd php-fishing-quote-api
-        sonar-scanner \
-          -Dsonar.projectKey=your_php_project_key \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=$SONAR_HOST_URL \
-          -Dsonar.login=$SONAR_TOKEN
+  # # Step 7: Run SonarQube Analysis for PHP
+  # - name: 'sonarsource/sonar-scanner-cli:latest'
+  #   id: 'SonarQube Scan PHP'
+  #   env:
+  #     - '$SONAR_HOST_URL'
+  #     - 'SONAR_TOKEN=${SONAR_TOKEN}'
+  #   entrypoint: 'bash'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       cd php-fishing-quote-api
+  #       sonar-scanner \
+  #         -Dsonar.projectKey=your_php_project_key \
+  #         -Dsonar.sources=. \
+  #         -Dsonar.host.url=$SONAR_HOST_URL \
+  #         -Dsonar.login=$SONAR_TOKEN
 
   # # Step 8: (Optional) Build Docker Image for Python App
   # - name: 'gcr.io/cloud-builders/docker'
