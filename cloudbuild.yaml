@@ -125,9 +125,9 @@ timeout: '1200s'
 # Optional: Notifications or further actions
 
 substitutions:
-  _SNYK_TOKEN: '8686f5ad-2e7d-487b-904e-24efa16fc928'
-  _SONAR_PROJECT_KEY: 'Sharky-Enterprises'
-  _SONAR_HOST_URL: 'https://your-sonarqube-instance.com'
+  SNYK_TOKEN: '8686f5ad-2e7d-487b-904e-24efa16fc928'
+  SONAR_PROJECT_KEY: 'Sharky-Enterprises'
+  SONAR_HOST_URL: 'https://your-sonarqube-instance.com'
   SONAR_TOKEN: 'be7e9422567f4c81bbcfe0021aabe1d5ae792486'
   _REPO_NAME: 'Sharky-Enterprises'
 
