@@ -26,20 +26,20 @@ steps:
     id: 'sonarqube-scan'
     secretEnv: ['SONAR_TOKEN']
 
-  # Step 2.1: Fetch SonarQube analysis report via API
-  - name: 'gcr.io/cloud-builders/curl'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -e
-        # Wait for SonarQube analysis to complete
-        sleep 30
-        # Fetch the analysis report
-        curl -u "$${SONAR_TOKEN}:" "http://localhost:9000/api/issues/search?componentKeys=sharky-Enterprises" > sonar-report.json
-    id: 'fetch-sonarqube-report'
-    waitFor: ['sonarqube-scan']
-    secretEnv: ['SONAR_TOKEN']
+  # # Step 2.1: Fetch SonarQube analysis report via API
+  # - name: 'gcr.io/cloud-builders/curl'
+  #   entrypoint: 'bash'
+  #   args:
+  #     - '-c'
+  #     - |
+  #       set -e
+  #       # Wait for SonarQube analysis to complete
+  #       sleep 30
+  #       # Fetch the analysis report
+  #       curl -u "$${SONAR_TOKEN}:" "http://localhost:9000/api/issues/search?componentKeys=sharky-Enterprises" > sonar-report.json
+  #   id: 'fetch-sonarqube-report'
+  #   waitFor: ['sonarqube-scan']
+  #   secretEnv: ['SONAR_TOKEN']
 
   # Step 2.2: Upload SonarQube output to the bucket
   - name: 'gcr.io/cloud-builders/gsutil'
