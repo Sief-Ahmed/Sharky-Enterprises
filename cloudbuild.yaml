@@ -33,7 +33,7 @@ steps:
         # Wait for SonarQube analysis to complete
         sleep 30
         # Fetch the analysis report
-        curl -u ${SONAR_TOKEN}: http://localhost:9000/api/issues/search?componentKeys=sharky-Enterprises > sonar-report.json
+        curl -u "${SONAR_TOKEN}:" "http://localhost:9000/api/issues/search?componentKeys=sharky-Enterprises" > sonar-report.json
     id: 'fetch-sonarqube-report'
     waitFor: ['sonarqube-scan']
     secretEnv: ['SONAR_TOKEN']
@@ -125,9 +125,7 @@ secrets:
       SNYK_TOKEN: projects/720033023335/secrets/SNYK_TOKEN/versions/latest
       SONAR_TOKEN: projects/720033023335/secrets/SONAR_TOKEN/versions/latest
 
-
 # Define substitution variables
 substitutions:
-  _IMAGE_URI: 'gcr.io/your-project/your-image'
+  _IMAGE_URI: 'us-docker.pkg.dev/my-gcp-project/my-repo/my-app-image:latest'
   _BUCKET_NAME: 'sec-scans'
-  _IMAGE_URI='us-docker.pkg.dev/my-gcp-project/my-repo/my-app-image:latest'
