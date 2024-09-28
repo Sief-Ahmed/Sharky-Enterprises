@@ -3,24 +3,25 @@ options:
   
 steps:
    # Step 1: Install Snyk CLI
-  - name: 'gcr.io/cloud-builders/curl'
-    entrypoint: 'bash'
-    args: 
-      - '-c'
-      - |
-        curl -sL https://snyk.io/install | bash
-    id: 'Install Snyk CLI'
-
-  # Step 2: Run Snyk security scan on the entire Cloud Build workspace
-  - name: 'gcr.io/cloud-builders/bash'
-    entrypoint: 'bash'
+  - name: snyk/snyk-cli:npm
     args:
       - '-c'
-      - |
-        snyk auth ${_SNYK_TOKEN} &&
-        snyk test --all-projects
-    id: 'Snyk Security Scan'
+      - |-
+        snyk config set api=${_SNYK_TOKEN}
+        snyk test --severity-threshold=medium
+    id: Snyk Open Source Test
+    entrypoint: bash
 
+
+  # Step 2: Run Snyk security scan on the entire Cloud Build workspace
+   - name: snyk/snyk-cli:npm
+    args:
+      - '-c'
+      - |-
+        snyk config set api=${_SNYK_TOKEN}
+        snyk code test --severity-threshold=medium
+    id: Snyk Code Test
+    entrypoint: bash
   # Step 3: Run SonarQube code analysis
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['sonar:sonar', '-Dsonar.projectKey=${_SONAR_PROJECT_KEY}', '-Dsonar.host.url=${_SONAR_HOST_URL}', '-Dsonar.login=${_SONAR_AUTH_TOKEN}']
