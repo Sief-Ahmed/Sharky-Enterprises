@@ -1,27 +1,27 @@
 options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
-  
+
 steps:
-   # Step 1: Install Snyk CLI
-  - name: snyk/snyk-cli:npm
+  # Step 1: Install Snyk CLI
+  - name: 'snyk/snyk-cli:npm'
+    entrypoint: 'bash'
     args:
       - '-c'
-      - |-
+      - |
         snyk config set api=${_SNYK_TOKEN}
         snyk test --severity-threshold=medium
-    id: Snyk Open Source Test
-    entrypoint: bash
-
+    id: 'Snyk Open Source Test'
 
   # Step 2: Run Snyk security scan on the entire Cloud Build workspace
-   - name: snyk/snyk-cli:npm
+  - name: 'snyk/snyk-cli:npm'
+    entrypoint: 'bash'
     args:
       - '-c'
-      - |-
+      - |
         snyk config set api=${_SNYK_TOKEN}
         snyk code test --severity-threshold=medium
-    id: Snyk Code Test
-    entrypoint: bash
+    id: 'Snyk Code Test'
+
   # Step 3: Run SonarQube code analysis
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['sonar:sonar', '-Dsonar.projectKey=${_SONAR_PROJECT_KEY}', '-Dsonar.host.url=${_SONAR_HOST_URL}', '-Dsonar.login=${_SONAR_AUTH_TOKEN}']
