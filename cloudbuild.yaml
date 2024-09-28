@@ -41,14 +41,14 @@ steps:
   #   waitFor: ['sonarqube-scan']
   #   secretEnv: ['SONAR_TOKEN']
 
-  # Step 2.2: Upload SonarQube output to the bucket
-  - name: 'gcr.io/cloud-builders/gsutil'
-    args:
-      - 'cp'
-      - 'sonar-report.json'
-      - 'gs://${_BUCKET_NAME}'
-    id: 'upload-sonarqube-output'
-    waitFor: ['fetch-sonarqube-report']
+  # # Step 2.2: Upload SonarQube output to the bucket
+  # - name: 'gcr.io/cloud-builders/gsutil'
+  #   args:
+  #     - 'cp'
+  #     - 'sonar-report.json'
+  #     - 'gs://${_BUCKET_NAME}'
+  #   id: 'upload-sonarqube-output'
+  #   waitFor: ['fetch-sonarqube-report']
 
   # Step 3: Scan the code using OWASP Dependency Check
   - name: 'gcr.io/cloud-builders/docker'
