@@ -2,15 +2,23 @@ options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
   
 steps:
-   # Step 1: Pull the Snyk Docker image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'snyk/snyk:alpine']
-    id: 'Pull Snyk Image'
-
-  # Step 2: Run Snyk security scan using the pulled image
-  - name: 'gcr.io/cloud-builders/docker'
+   # Step 1: Install Snyk CLI
+  - name: 'gcr.io/cloud-builders/curl'
     entrypoint: 'bash'
-    args: ['-c', 'docker run --rm -e SNYK_TOKEN=${_SNYK_TOKEN}  snyk/snyk:alpine snyk test --all-projects']
+    args: 
+      - '-c'
+      - |
+        curl -sL https://snyk.io/install | bash
+    id: 'Install Snyk CLI'
+
+  # Step 2: Run Snyk security scan on the entire Cloud Build workspace
+  - name: 'gcr.io/cloud-builders/bash'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        snyk auth ${_SNYK_TOKEN} &&
+        snyk test --all-projects
     id: 'Snyk Security Scan'
 
   # Step 3: Run SonarQube code analysis
