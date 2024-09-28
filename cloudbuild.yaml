@@ -9,7 +9,8 @@ steps:
 
   # Step 2: Run Snyk security scan using the pulled image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['run', '--rm', '-e', 'SNYK_TOKEN=${_SNYK_TOKEN}', 'snyk/snyk:alpine', 'test']
+    entrypoint: 'bash'
+    args: ['-c', 'docker run --rm -e SNYK_TOKEN=${_SNYK_TOKEN} snyk/snyk:1.1132.0 test']
     id: 'Snyk Security Scan'
 
   # Step 3: Run SonarQube code analysis
