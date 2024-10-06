@@ -1,48 +1,85 @@
 steps:
-# Step to build Flask App (app1)
-- name: 'gcr.io/cloud-builders/docker'
-  id: 'Build Flask App'
-  dir: 'flask_app'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker build -t us-west2-docker.pkg.dev/$PROJECT_ID/sharky-enterprises/app1:latest .
-
-# Step to build PHP App (app2)
-- name: 'gcr.io/cloud-builders/docker'
-  id: 'Build PHP App'
-  dir: 'php-fishing-quote-api'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker build -t us-west2-docker.pkg.dev/$PROJECT_ID/sharky-enterprises/app2:latest .
-
-# Push Flask App (app1) to Artifact Registry
-- name: 'gcr.io/cloud-builders/docker'
-  id: 'Push Flask App to Artifact Registry'
-  args: ['push', 'us-west2-docker.pkg.dev/$PROJECT_ID/sharky-enterprises/app1:latest']
-
-# Push PHP App (app2) to Artifact Registry
-- name: 'gcr.io/cloud-builders/docker'
-  id: 'Push PHP App to Artifact Registry'
-  args: ['push', 'us-west2-docker.pkg.dev/$PROJECT_ID/sharky-enterprises/app2:latest']
-  # deploy container image to GKE
-- name: "gcr.io/cloud-builders/gke-deploy"
-  args:
-  - run
-  - --filename=deployment.yaml
-  - --location=us-central1
-  - --cluster=primary-gke-cluster
-  - name: "gcr.io/cloud-builders/gke-deploy"
-  args:
-  - run
-  - --filename=deployment.yaml
-  - --location=us-central1
-  - --cluster=primary-gke-cluster
-
-
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - '-c'
+      - >
+        docker build -t
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
+        .
+    dir: flask_app
+    id: Build Flask App
+    entrypoint: bash
+  - name: 'sonarsource/sonar-scanner-cli:latest'
+    args:
+      - '-Dsonar.projectKey=sharky_enterprise'
+      - '-Dsonar.sources=./flask_app'
+      - '-Dsonar.host.url=https://sonarcloud.io'
+      - '-Dsonar.login=be7e9422567f4c81bbcfe0021aabe1d5ae792486'
+      - '-Dsonar.organization=sharky'
+      - '-Dsonar.c.file.suffixes=-'
+      - '-Dsonar.cpp.file.suffixes=-'
+      - '-Dsonar.objc.file.suffixes=-'
+      - '-X'
+    id: SonarQube Scan for Flask App
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - '-c'
+      - >
+        docker build -t
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
+        .
+    dir: php-fishing-quote-api
+    id: Build PHP App
+    entrypoint: bash
+  - name: 'sonarsource/sonar-scanner-cli:latest'
+    args:
+      - '-Dsonar.projectKey=sharky_enterprise'
+      - '-Dsonar.sources=./php-fishing-quote-api'
+      - '-Dsonar.host.url=https://sonarcloud.io'
+      - '-Dsonar.login=be7e9422567f4c81bbcfe0021aabe1d5ae792486'
+      - '-Dsonar.organization=sharky'
+      - '-Dsonar.exclusions=**/*.java'
+      - '-X'
+    id: SonarQube Scan for PHP App
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - >-
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
+    id: Push Flask App to Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - >-
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
+    id: Push PHP App to Artifact Registry
+  - name: 'aquasec/trivy:latest'
+    args:
+      - image
+      - >-
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
+    id: Trivy Scan for Flask App Image
+  - name: 'aquasec/trivy:latest'
+    args:
+      - image
+      - >-
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
+    id: Trivy Scan for PHP App Image
+  - name: gcr.io/cloud-builders/gke-deploy
+    args:
+      - run
+      - '--filename=deployment.yaml'
+      - '--location=us-central1'
+      - '--cluster=primary-gke-cluster'
+      - >-
+        --image=us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
+      - >-
+        --image=us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
+    id: Deploy to GKE
 images:
-  - 'us-west2-docker.pkg.dev/$PROJECT_ID/sharky-enterprises/app1:latest'
-  - 'us-west2-docker.pkg.dev/$PROJECT_ID/sharky-enterprises/app2:latest'
+  - >-
+    us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
+  - >-
+    us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -5,6 +5,9 @@ metadata:
   name: app1-deployment
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: app1
   template:
     metadata:
       labels:
@@ -12,9 +15,26 @@ spec:
     spec:
       containers:
       - name: app1-container
-        image: app1
+        image: us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
         ports:
         - containerPort: 5000
+---
+# Service for app1 (service-a)
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a
+  annotations:
+    cloud.google.com/backend-config: '{"default": "backend-config"}'
+spec:
+  selector:
+    app: app1
+  ports:
+    - protocol: TCP
+      port: 5000  # External service port
+      targetPort: 5000  # The containerPort in the deployment
+  type: LoadBalancer
+  loadBalancerIP: 146.148.50.139  # Static IP for service-a
 ---
 # app2 Deployment
 apiVersion: apps/v1
@@ -23,6 +43,9 @@ metadata:
   name: app2-deployment
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: app2
   template:
     metadata:
       labels:
@@ -30,6 +53,53 @@ spec:
     spec:
       containers:
       - name: app2-container
-        image: app2
+        image: us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
         ports:
         - containerPort: 8000
+---
+# Service for app2 (service-b)
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+  annotations:
+    cloud.google.com/backend-config: '{"default": "backend-config"}'
+spec:
+  selector:
+    app: app2
+  ports:
+    - protocol: TCP
+      port: 8000  # External service port
+      targetPort: 8000  # The containerPort in the deployment
+  type: LoadBalancer
+  loadBalancerIP: 35.226.62.63  # Static IP for service-b
+---
+# Ingress for traffic splitting between service-a and service-b
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  annotations:
+    ingress.gcp.kubernetes.io/traffic-split: |
+      [
+        {"serviceName": "service-a", "servicePort": 5000, "percentage": 20},
+        {"serviceName": "service-b", "servicePort": 8000, "percentage": 80}
+      ]
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /quote
+        pathType: Prefix
+        backend:
+          service:
+            name: service-a
+            port:
+              number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service-b
+            port:
+              number: 8000
