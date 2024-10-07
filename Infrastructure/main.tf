@@ -2,7 +2,12 @@
 
 # Specify the provider to use, which is Google Cloud Platform (GCP)
 provider "google" {
-  credentials = file("/home/kali/Sharky-Enterprises/Infrastructure/avian-azimuth-436920-q0-e9e6039d8b85.json")
+  credentials = file("avian-azimuth-436920-q0-199d2a839fab.json")
+  project     = var.project_id # The GCP project ID where resources will be created.
+  region      = var.region     # The region where GCP resources will be deployed.
+}
+provider "google-beta" {
+  credentials = file("avian-azimuth-436920-q0-199d2a839fab.json")
   project     = var.project_id # The GCP project ID where resources will be created.
   region      = var.region     # The region where GCP resources will be deployed.
 }
@@ -14,6 +19,13 @@ provider "kubernetes" {
   client_key             = base64decode(google_container_cluster.primary.master_auth[0].client_key)
   cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
 
+}
+
+provider "kubectl" {
+  host                   = google_container_cluster.primary.endpoint
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
+  token                  = data.google_container_cluster.primary.token
+  load_config_file       = false
 }
 
 
@@ -45,28 +57,19 @@ resource "google_compute_subnetwork" "gke_subnet" {
   ip_cidr_range = "10.0.0.0/16"
   region        = var.region
 
-  # Define secondary IP ranges for the subnet
-  secondary_ip_range {
-    range_name    = "gke-pods"    # Name of the secondary IP range for Pods.
-    ip_cidr_range = "10.1.0.0/16" # IP range for the Pods.
-  }
 
-  secondary_ip_range {
-    range_name    = "gke-services" # Name of the secondary IP range for Services.
-    ip_cidr_range = "10.2.0.0/20"  # IP range for the Services.
-  }
 }
 # IAM Configuration
 
-# IAM binding to grant GKE Cluster Admin role to the Terraform service account??????
-resource "google_project_iam_binding" "gke_admin" {
-  project = var.project_id          # The project ID to apply the IAM role.
-  role    = "roles/container.admin" # GKE Cluster Admin role required to manage GKE clusters.
+# # IAM binding to grant GKE Cluster Admin role to the Terraform service account
+# resource "google_project_iam_binding" "gke_admin" {
+#   project = var.project_id          # The project ID to apply the IAM role.
+#   role    = "roles/container.admin" # GKE Cluster Admin role required to manage GKE clusters.
 
-  members = [
-    "serviceAccount:${var.service_account_email}" # The service account email to grant the role to.
-  ]
-}
+#   members = [
+#     "serviceAccount:${var.service_account_email}" # The service account email to grant the role to.
+#   ]
+# }
 
 
 # Key Management Service (KMS) Configuration
@@ -102,51 +105,108 @@ output "crypto_key_id" {
 
 # Define the primary GKE cluster
 resource "google_container_cluster" "primary" {
+  provider                 = google-beta
   name                     = "primary-gke-cluster" # The name of the GKE cluster.
   location                 = var.region            # The region or zone where the cluster will be deployed.
-  initial_node_count       = 1                     # Initial number of nodes; will use a node pool for scaling.
+  initial_node_count       = 2                     # Initial number of nodes; will use a node pool for scaling.
   remove_default_node_pool = true                  # Remove the default node pool to define custom node pools.
   enable_l4_ilb_subsetting = true
-  enable_autopilot = true
+
+
 
   # Enable private nodes for security; no public IPs on nodes
   private_cluster_config {
-    enable_private_nodes    = true                  # Nodes will not have public IPs.
-    master_ipv4_cidr_block  = "172.16.0.0/28"       # CIDR block for GKE control plane.
+    enable_private_nodes   = true            # Nodes will not have public IPs.
+    master_ipv4_cidr_block = "172.16.0.0/28" # CIDR block for GKE control plane.
 
     # Configure master access settings
     master_global_access_config {
-      enabled = true # Allows access to the control plane from outside the VPC.
+      enabled = false # Allows access to the control plane from outside the VPC.
     }
   }
+  cluster_ipv4_cidr = "10.80.0.0/14"
+  default_snat_status {
+    disabled = false
+  }
 
+
+  protect_config {
+    workload_config {
+      audit_mode = "BASIC"
+    }
+
+    workload_vulnerability_mode = "BASIC"
+  }
   # Define auto provisioning defaults (disabled in this case)
   cluster_autoscaling {
-    enabled = false
+    autoscaling_profile = "BALANCED"
+
+
 
     auto_provisioning_defaults {
       image_type = "COS_CONTAINERD"
+      management {
+        auto_upgrade = true
+        auto_repair  = true
+      }
+      upgrade_settings {
+        strategy = "BLUE_GREEN"
+
+        blue_green_settings {
+          standard_rollout_policy {
+            batch_percentage    = 0.2   # 20% of nodes per batch
+            batch_soak_duration = "60s" # 1 minute between batches
+          }
+          node_pool_soak_duration = "300s" # 5 minutes
+        }
+      }
+    }
+
+
+
+  }
+  master_auth {
+    client_certificate_config {
+      issue_client_certificate = false
     }
   }
-
   # Encryption Configuration using KMS
   database_encryption {
     state    = "ENCRYPTED"
     key_name = google_kms_crypto_key.k8s_crypto_key.id
   }
+  default_max_pods_per_node = 4
 
   # Select the release channel
   release_channel {
     channel = "STABLE"
   }
-
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_BASIC"
+  }
   # Addons configuration
   addons_config {
-    horizontal_pod_autoscaling {
-      disabled = false # Enable Horizontal Pod Autoscaling
+    gce_persistent_disk_csi_driver_config {
+      enabled = true
     }
-  }
 
+    gke_backup_agent_config {
+      enabled = true
+    }
+
+    horizontal_pod_autoscaling {
+      disabled = false
+    }
+
+    network_policy_config {
+      disabled = false
+    }
+
+  }
+  pod_security_policy_config {
+    enabled = true
+  }
   # Lifecycle settings
   lifecycle {
     create_before_destroy = true # Recreate resource before destroying
@@ -160,6 +220,9 @@ resource "google_container_cluster" "primary" {
   logging_service    = "logging.googleapis.com/kubernetes"    # Send logs to Cloud Logging.
   monitoring_service = "monitoring.googleapis.com/kubernetes" # Send metrics to Cloud Monitoring.
 
+  logging_config {
+    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+  }
   # Enable network policy
   network_policy {
     provider = "CALICO" # Options: CALICO, CLOUD_FIREWALL
@@ -171,7 +234,7 @@ resource "google_container_cluster" "primary" {
     evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE" # Enforces policies defined at the project level.
   }
 
- # Define the initial default node configuration
+  # Define the initial default node configuration
   node_config {
     machine_type = "e2-medium" # Machine type for the nodes in the cluster.
 
@@ -184,10 +247,6 @@ resource "google_container_cluster" "primary" {
     # Service account for the nodes to use
     #service_account = var.service_account_email # Use a predefined service account for the nodes.
 
-    shielded_instance_config {
-      enable_secure_boot          = true
-      enable_integrity_monitoring = true
-    }
 
     kubelet_config {
       cpu_manager_policy                     = "static"
@@ -200,6 +259,7 @@ resource "google_container_cluster" "primary" {
     #   sandbox_type = "GVISOR"
     # }
   }
+  enable_shielded_nodes = true
 
   maintenance_policy {
     daily_maintenance_window {
@@ -210,6 +270,7 @@ resource "google_container_cluster" "primary" {
 
 }
 
+
 # GKE Node Pool Configuration
 resource "google_container_node_pool" "primary_preemptible_nodes" {
   name       = "my-node-pool"
@@ -218,23 +279,26 @@ resource "google_container_node_pool" "primary_preemptible_nodes" {
   node_count = 1
 
   node_config {
-    preemptible  = true
-    machine_type = "e2-medium"
-  }
-  management {
-    auto_upgrade = true
-    auto_repair  = true
-  }
-  upgrade_settings {
-    strategy = "BLUE_GREEN"
-
-    blue_green_settings {
-      standard_rollout_policy {
-        batch_percentage    = 0.2   # 20% of nodes per batch
-        batch_soak_duration = "60s" # 1 minute between batches
-      }
-      node_pool_soak_duration = "300s" # 5 minutes
+    preemptible     = true
+    machine_type    = "e2-medium"
+    disk_size_gb    = 100
+    disk_type       = "pd-balanced"
+    image_type      = "COS_CONTAINERD"
+    logging_variant = "DEFAULT"
+    metadata = {
+      disable-legacy-endpoints = "true"
     }
+
+
+    oauth_scopes    = ["https://www.googleapis.com/auth/devstorage.read_only", "https://www.googleapis.com/auth/logging.write", "https://www.googleapis.com/auth/monitoring", "https://www.googleapis.com/auth/service.management.readonly", "https://www.googleapis.com/auth/servicecontrol", "https://www.googleapis.com/auth/trace.append"]
+    service_account = "default"
+
+    shielded_instance_config {
+      enable_integrity_monitoring = true
+
+    }
+
+
   }
 
 
@@ -245,3 +309,4 @@ resource "google_container_node_pool" "primary_preemptible_nodes" {
 
   depends_on = [google_container_cluster.primary]
 }
+

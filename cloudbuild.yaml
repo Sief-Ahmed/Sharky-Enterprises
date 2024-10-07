@@ -21,6 +21,9 @@ steps:
       - '-Dsonar.objc.file.suffixes=-'
       - '-X'
     id: SonarQube Scan for Flask App
+    dir: flask_app
+    id: Build Flask App
+    entrypoint: bash 
   - name: gcr.io/cloud-builders/docker
     args:
       - '-c'

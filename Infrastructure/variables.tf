@@ -11,8 +11,4 @@ variable "region" {
   default     = "us-central1" # Default region set to us-central1.
 }
 
-variable "service_account_email" {
-  description = "The email of the service account used for deploying the GKE cluster."
-  type        = string
-  default     = "720033023335-compute@developer.gserviceaccount.com"
-}
+

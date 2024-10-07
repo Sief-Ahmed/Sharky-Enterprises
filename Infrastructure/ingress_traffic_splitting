@@ -1,0 +1,55 @@
+resource "kubectl_manifest" "test" {
+    yaml_body = <<YAML 
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: backend-config
+spec:
+  healthCheck:
+    checkIntervalSec: 30        # Interval between health checks
+    timeoutSec: 10              # Timeout for the health check response
+    healthyThreshold: 1         # How many successful checks to mark as healthy
+    unhealthyThreshold: 3       # How many failed checks to mark as unhealthy
+    requestPath: "/quote"       # Path for the health check
+
+
+YAML
+}
+
+
+
+
+
+# # Ingress Resource
+# resource "kubernetes_ingress_v1" "example_ingress" {
+#   metadata {
+#     name = "example-ingress"
+
+#     annotations = {
+#       "kubernetes.io/ingress.class"            = "gce"  # Use GCE Ingress controller
+#       "ingress.gcp.kubernetes.io/traffic-split" = jsonencode([
+#         {
+#           "serviceName" = "service-a",
+#           "servicePort" = 5000,
+#           "weight"      = 20
+#         },
+#         {
+#           "serviceName" = "service-b",
+#           "servicePort" = 8000,
+#           "weight"      = 80
+#         }
+#       ])
+#     }
+#   }
+
+#   spec {
+#     default_backend {
+#       service {
+#         name = "service-a"  # Default backend
+#         port {
+#           number = 5000
+#         }
+#       }
+#     }
+#   }
+# }
