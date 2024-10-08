@@ -19,6 +19,7 @@ steps:
       - '-Dsonar.c.file.suffixes=-'
       - '-Dsonar.cpp.file.suffixes=-'
       - '-Dsonar.objc.file.suffixes=-'
+      - '-Dsonar.qualitygate.wait=true'
       - '-X'
     id: SonarQube Scan for Flask App
     dir: flask_app
@@ -42,20 +43,9 @@ steps:
       - '-Dsonar.login=be7e9422567f4c81bbcfe0021aabe1d5ae792486'
       - '-Dsonar.organization=sharky'
       - '-Dsonar.exclusions=**/*.java'
+      - '-Dsonar.qualitygate.wait=true'
       - '-X'
     id: SonarQube Scan for PHP App
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - push
-      - >-
-        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
-    id: Push Flask App to Artifact Registry
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - push
-      - >-
-        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
-    id: Push PHP App to Artifact Registry
   - name: 'aquasec/trivy:latest'
     args:
       - image
@@ -68,6 +58,18 @@ steps:
       - >-
         us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
     id: Trivy Scan for PHP App Image
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - >-
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app1:latest
+    id: Push Flask App to Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - >-
+        us-west2-docker.pkg.dev/avian-azimuth-436920-q0/sharky-enterprises/app2:latest
+    id: Push PHP App to Artifact Registry
   - name: gcr.io/cloud-builders/gke-deploy
     args:
       - run
